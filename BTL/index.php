@@ -42,8 +42,12 @@ function displayComments($conn, $post_id, $parent_id = NULL) {
 }
 ?>
 
-<h1><?php echo htmlspecialchars($post['title']); ?></h1>
-<p><?php echo htmlspecialchars($post['content']); ?></p>
+<?php if (!empty($post) && is_array($post)): ?>
+    <h1><?php echo htmlspecialchars($post['title'] ?? 'Không có tiêu đề'); ?></h1>
+    <p><?php echo htmlspecialchars($post['content'] ?? 'Không có nội dung'); ?></p>
+<?php else: ?>
+    <p>Bài viết không tồn tại.</p>
+<?php endif; ?>
 
 <h2>Bình luận</h2>
 <?php if (isset($_SESSION['user_id'])): ?>
