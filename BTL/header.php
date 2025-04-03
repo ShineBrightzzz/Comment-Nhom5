@@ -10,4 +10,3 @@
     <?php endif; ?>
 </nav>
 <hr>
-<?php include 'header.php'; ?>
