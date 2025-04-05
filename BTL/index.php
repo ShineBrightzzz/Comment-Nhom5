@@ -42,19 +42,23 @@ function displayComments($conn, $post_id, $parent_id = NULL) {
 }
 ?>
 
-<h1><?php echo htmlspecialchars($post['title']); ?></h1>
-<p><?php echo htmlspecialchars($post['content']); ?></p>
+<?php if (!empty($post) && is_array($post)): ?>
+    <h1><?php echo htmlspecialchars($post['title'] ?? 'Không có tiêu đề'); ?></h1>
+    <p><?php echo htmlspecialchars($post['content'] ?? 'Không có nội dung'); ?></p>
 
-<h2>Bình luận</h2>
-<?php if (isset($_SESSION['user_id'])): ?>
+    <h2>Bình luận</h2>
+    <?php if (isset($_SESSION['user_id'])): ?>
     <form method="post" action="comment.php">
         <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
         <textarea name="content" required placeholder="Viết bình luận..."></textarea>
         <button type="submit">Gửi</button>
     </form>
-<?php else: ?>
+    <?php else: ?>
     <p>Vui lòng <a href="login.php">đăng nhập</a> để bình luận.</p>
 <?php endif; ?>
 
 <h3>Danh sách bình luận:</h3>
 <?php displayComments($conn, $post_id); ?>
+<?php else: ?>
+    <p>Bài viết không tồn tại.</p>
+<?php endif; ?>

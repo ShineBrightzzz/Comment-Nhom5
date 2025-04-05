@@ -9,5 +9,4 @@
         <a href="register.php">Đăng ký</a>
     <?php endif; ?>
 </nav>
-<hr>
-<?php include 'header.php'; ?>
+
