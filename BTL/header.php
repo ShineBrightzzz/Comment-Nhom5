@@ -9,4 +9,3 @@
         <a href="register.php">Đăng ký</a>
     <?php endif; ?>
 </nav>
-
