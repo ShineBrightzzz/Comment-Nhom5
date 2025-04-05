@@ -1,7 +1,9 @@
+
 <?php
 session_start();
 include 'config.php';
-
+//lấy get recapcha
+$error = $_GET['error'] ?? null;
 // Lấy bài viết
 $post_id = $_GET['id'] ?? 1;
 $query = $conn->prepare("SELECT * FROM post WHERE id = ?");
@@ -51,6 +53,19 @@ function displayComments($conn, $post_id, $parent_id = NULL) {
     <form method="post" action="comment.php">
         <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
         <textarea name="content" required placeholder="Viết bình luận..."></textarea>
+        <?php
+        //Xác nhận không là người máy khi bình luận quá nhiều trong 1 khoảng thời giangi
+        if(isset($_GET['error'])&&$_GET['error'] == 'limit_1'){
+        echo "<p style='color: red;'>Bạn đã bình luận quá nhiều trong khoảng thời gian ngắn. Vui lòng xác nhận.</p>";
+        echo "<div class='g-recaptcha' data-sitekey='6LevCQsrAAAAAIYq4LfTqGrkkQ621YLLZmn_zMYJ'></div>";
+        }else if(isset($_GET['error'])&&$_GET['error'] == 'limit_2'){
+        echo "<p style='color: red;'>Bạn đã bình luận quá giống nhau. Vui lòng xác nhận.</p>";
+        echo "<div class='g-recaptcha' data-sitekey='6LevCQsrAAAAAIYq4LfTqGrkkQ621YLLZmn_zMYJ'></div>";
+        }
+        ?>
+        <?php if ($error == 'recaptcha'): ?>
+            <p style="color: red;">Vui lòng xác minh bạn là con người.</p>
+        <?php endif; ?>
         <button type="submit">Gửi</button>
     </form>
     <?php else: ?>
@@ -62,3 +77,5 @@ function displayComments($conn, $post_id, $parent_id = NULL) {
 <?php else: ?>
     <p>Bài viết không tồn tại.</p>
 <?php endif; ?>
+
+<script src="https://www.google.com/recaptcha/api.js"></script>
