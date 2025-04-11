@@ -1,0 +1,13 @@
+RewriteEngine On
+RewriteBase /Comment-Nhom5/
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^posts/([a-zA-Z0-9_-]+)$ index.php?posts=$1 [QSA,L]
+RewriteRule ^$ index.php [L,QSA]
+
+RewriteRule ^register$ pages/register.php [L,QSA]
+RewriteRule ^login$ pages/login.php [L,QSA]
+
+RewriteRule ^logout$ controllers/logout.php [L,QSA]

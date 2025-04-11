@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'config.php';
+include '../config/config.php';
 
 if (isset($_GET['id']) && isset($_GET['post_id'])) {
     $comment_id = $_GET['id'];
