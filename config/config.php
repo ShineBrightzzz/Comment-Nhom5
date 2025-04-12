@@ -1,7 +1,7 @@
 <?php
 $servername = "localhost";
 $username = "root";  
-$password = "123456";       
+$password = "";       
 $dbname = "comment_db";
 
 // Kết nối database

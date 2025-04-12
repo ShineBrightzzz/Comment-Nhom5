@@ -1,5 +1,5 @@
 <?php
 session_destroy();
-header("Location: ./login");
+header("Location: /Comment-Nhom5/login");
 exit();
 ?>

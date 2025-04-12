@@ -4,7 +4,7 @@ RewriteBase /Comment-Nhom5/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
-RewriteRule ^posts/([a-zA-Z0-9_-]+)$ index.php?posts=$1 [QSA,L]
+RewriteRule ^posts/([a-zA-Z0-9_-]+)$ pages/posts.php?posts=$1 [QSA,L]
 RewriteRule ^$ index.php [L,QSA]
 
 RewriteRule ^register$ pages/register.php [L,QSA]
