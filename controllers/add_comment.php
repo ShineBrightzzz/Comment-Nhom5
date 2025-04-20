@@ -1,6 +1,15 @@
 <?php
 session_start();
 include '../config/config.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Dotenv\Dotenv;
+
+$dotenv = Dotenv::createImmutable(__DIR__ . '/..'); 
+$dotenv->load();
+
+// Sử dụng biến từ .env
+echo "App name: " . $_ENV['APP_NAME'];
 
 // Xử lý reCAPTCHA nếu có
 if (isset($_POST['g-recaptcha-response'])) {
@@ -9,7 +18,12 @@ if (isset($_POST['g-recaptcha-response'])) {
         header("Location: /Comment-Nhom5/posts/{$_POST['post_id']}?error=recaptcha");
         exit();
     } else {
-        $secret = '6LevCQsrAAAAADT1MId90bAQablX6idWMfYdarlE';
+        $secret = $_ENV['RECAPTCHA_SECRET'];
+        if (!$secret) {
+            header("Location: /Comment-Nhom5/posts/{$_POST['post_id']}?error=recaptcha");
+            exit();
+        }
+        // Verify reCAPTCHA
         $verifyResponse = file_get_contents(
             "https://www.google.com/recaptcha/api/siteverify?secret=$secret&response={$recapcha_post}"
         );
