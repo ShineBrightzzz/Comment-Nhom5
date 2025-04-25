@@ -1,7 +1,6 @@
 <?php 
 include 'config/config.php';
 include './layouts/header.php';
-session_start();
 ?>
 
 <!DOCTYPE html>

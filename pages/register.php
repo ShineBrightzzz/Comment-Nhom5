@@ -4,11 +4,12 @@ include '../config/config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = uniqid(); // Tạo ID ngẫu nhiên
+    $username = trim($_POST['username']);
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $avatar = trim($_POST['avatar']) ?: "https://ui-avatars.com/api/?name=" . urlencode($name) . "&background=random"; // Sử dụng URL mặc định nếu không nhập
-
+    $avatar = trim("https://ui-avatars.com/api/?name=" . urlencode($name) . "&background=random"); // Sử dụng URL mặc định nếu không nhập
+    
     // Kiểm tra email đã tồn tại chưa
     $check_query = $conn->prepare("SELECT id FROM user WHERE email = ?");
     $check_query->bind_param("s", $email);
@@ -19,8 +20,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error = "Email đã được sử dụng!";
     } else {
         // Chèn người dùng mới vào database
-        $query = $conn->prepare("INSERT INTO user (id, name, email, password, avatar) VALUES (?, ?, ?, ?, ?)");
-        $query->bind_param("sssss", $id, $name, $email, $password, $avatar);
+        $query = $conn->prepare("INSERT INTO user (id, username, name, email, password, avatar) VALUES (?, ?, ?, ?, ?, ?)");
+        $query->bind_param("sssss", $id, $username, $name, $email, $password, $avatar);
         if ($query->execute()) {
             $_SESSION['user_id'] = $id;
             $_SESSION['user_name'] = $name;
@@ -52,6 +53,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <form method="post">
             <div class="mb-3">
+                <label for="username" class="form-label">Tên:</label>
+                <input type="text" name="username" class="form-control" id="username" required>
+            </div>
+
+            <div class="mb-3">
                 <label for="name" class="form-label">Tên:</label>
                 <input type="text" name="name" class="form-control" id="name" required>
             </div>
@@ -66,10 +72,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <input type="password" name="password" class="form-control" id="password" required>
             </div>
 
-            <div class="mb-3">
-                <label for="avatar" class="form-label">Avatar URL:</label>
-                <input type="text" name="avatar" class="form-control" id="avatar">
-            </div>
 
             <button type="submit" class="btn btn-success w-100">Đăng ký</button>
         </form>

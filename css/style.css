@@ -43,3 +43,77 @@ button:hover {
     color: red;
     font-size: 0.9rem;
 }
+
+/* Comment tree styling */
+.comment-container {
+    position: relative;
+}
+
+.replies-container {
+    position: relative;
+    margin-left: 15px;
+    padding-left: 25px;
+    border-left: none;
+}
+
+/* Vertical connection line */
+.comment-tree-line {
+    position: absolute;
+    width: 2px;
+    background-color: #dee2e6;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+}
+
+/* Horizontal connector from vertical line to comment */
+.comment-connector-horizontal {
+    height: 2px;
+    background-color: #dee2e6;
+    width: 24px;
+    position: absolute;
+    top: 30px;
+    left: -24px;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+/* Add hover effect to comment connections */
+.comment-container:hover > .comment-connector-horizontal,
+.comment-container:hover > .card .comment-tree-line {
+    background-color: #adb5bd;
+    transition: all 0.3s ease;
+}
+
+/* Enhance comment card on hover */
+.card:hover {
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Highlight effect for comments */
+.highlight-comment > .card {
+    border-left: 3px solid #0d6efd !important;
+    box-shadow: 0 0.25rem 0.5rem rgba(13, 110, 253, 0.15) !important;
+    transition: all 0.3s ease;
+}
+
+.highlight-child > .card {
+    border-left: 2px solid #6c757d !important;
+    transition: all 0.3s ease;
+}
+
+/* Nested comments spacing */
+.replies-container .comment-container {
+    margin-bottom: 0.75rem;
+}
+
+/* Last nested comment special treatment */
+.replies-container .comment-container:last-child {
+    margin-bottom: 0;
+}
+
+/* Enhanced styling for comment container when focused/active */
+.comment-container:focus-within > .card {
+    border-left: 3px solid #0d6efd !important;
+}

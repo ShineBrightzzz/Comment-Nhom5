@@ -1,7 +1,7 @@
 <?php
 session_start();
 include '../config/config.php';
-
+$post_id = $_POST['posts'] ?? NULL;
 // Handling both GET and POST requests for backward compatibility
 if (isset($_POST['comment_id']) || (isset($_GET['id']) && isset($_GET['post_id']))) {
     // Get comment ID from either POST or GET
@@ -36,7 +36,7 @@ if (isset($_POST['comment_id']) || (isset($_GET['id']) && isset($_GET['post_id']
         }
     }
 
-    header("Location: ../pages/posts.php?posts=" . $post_id);
+    header("Location: /Comment-Nhom5/posts/{$post_id}");
     exit;
 }
 

@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Set the height to match the scroll height
             this.style.height = (this.scrollHeight) + 'px';
             
-            // Adjust position of send button
-            const sendButton = this.parentElement.querySelector('button[type="submit"]');
+            // Adjust position of send button in reply forms
+            const sendButton = this.parentElement.querySelector('.send-button');
             if (sendButton) {
                 if (this.scrollHeight > 40) {
                     sendButton.classList.remove('top-0', 'mt-1');
@@ -17,6 +17,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     sendButton.classList.remove('top-50', 'translate-middle-y');
                     sendButton.classList.add('top-0', 'mt-1');
                 }
+            }
+            
+            // For edit forms, reposition save buttons container if necessary
+            const actionButtons = this.closest('form')?.querySelector('.action-buttons');
+            if (actionButtons) {
+                // Always ensure action buttons stay at the bottom
+                actionButtons.style.marginTop = '8px';
             }
         });
         
@@ -49,6 +56,10 @@ document.addEventListener('DOMContentLoaded', function() {
             textarea.style.height = 'auto';
             textarea.style.height = (textarea.scrollHeight) + 'px';
             textarea.focus();
+            
+            // Position the cursor at the end of the text
+            const textLength = textarea.value.length;
+            textarea.setSelectionRange(textLength, textLength);
         });
     });
     
