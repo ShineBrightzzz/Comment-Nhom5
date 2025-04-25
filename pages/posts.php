@@ -42,22 +42,39 @@ function displayComments($conn, $post_id, $parent_id = NULL) {
         echo "<strong>" . htmlspecialchars($userName) . "</strong>: " . nl2br(htmlspecialchars($row['content']));
         echo "<div class='text-muted small'>" . $row['created_at'] . "</div>";
 
-        if (isset($_SESSION['user_id'])) {
-            echo '
-                <form method="post" action="../controllers/add_comment.php" class="mt-2 mb-3">
-                    <input type="hidden" name="post_id" value="' . $post_id . '">
-                    <input type="hidden" name="parent_id" value="' . $row['id'] . '">
-                    <div class="position-relative">
-                        <textarea name="content" class="form-control rounded-pill pe-5 py-2" required placeholder="Viết bình luận..." rows="1"></textarea>
-                        <button type="submit" class="btn btn-primary position-absolute top-50 end-0 translate-middle-y me-2" style="border-radius: 50%;">
-                            <i class="bi bi-send-fill"></i>
-                        </button>
-                    </div>
-                </form>
-            ';
-        }
-        
+        // Kiểm tra nếu tham số 'edit_comment_id' có trong URL, tức là người dùng đang sửa bình luận
+               // Kiểm tra nếu tham số 'edit_comment_id' có trong URL, tức là người dùng đang sửa bình luận
+               $edit_comment_id = $_GET['edit_comment_id'] ?? null;
+               if ($edit_comment_id == $row['id']) {
+                   // Hiển thị form sửa bình luậns
+                   echo '
+                       <form method="post" action="../controllers/edit_comment.php" class="mt-2 mb-3">
+                           <input type="hidden" name="comment_id" value="' . $row['id'] . '">
+                           <input type="hidden" name="post_id" value="' . $post_id . '">
+                           <textarea name="content" class="form-control rounded-pill pe-5 py-2" required>' . htmlspecialchars($row['content']) . '</textarea>
+                           
+                           <!-- Di chuyển nút Lưu thay đổi và Hủy xuống dưới -->
+                           <div class="mt-3">
+                               <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                               <a href="posts.php?posts=' . $post_id . '" class="btn btn-secondary ms-2">Hủy</a>
+                           </div>
+                       </form>
+                   ';
+               } else {
+                   // Nếu không đang sửa, hiển thị nút "Sửa" và "Xóa"
+                   if (isset($_SESSION['user_id'])) {
+                       echo '
+                           <div class="d-flex justify-content-end mt-2">
+                                <a href="?posts=' . $post_id . '&edit_comment_id=' . $row['id'] . '" class="btn btn-warning btn-sm me-2">Sửa</a>
+                                <a href="../controllers/delete_comment.php?comment_id=' . $row['id'] . '" class="btn btn-danger btn-sm" onclick="return confirm(\'Bạn có chắc muốn xóa bình luận này không?\');">Xóa</a>
+                               
+                           </div>
+                       ';
+                   }
+               }
+       
 
+        // Hiển thị các bình luận trả lời (nếu có)
         displayComments($conn, $post_id, $row['id']);
         echo "</div>";
     }

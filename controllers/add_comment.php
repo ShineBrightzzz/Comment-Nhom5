@@ -1,15 +1,15 @@
 <?php
 session_start();
 include '../config/config.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+// require_once __DIR__ . '/../vendor/autoload.php';
 
-use Dotenv\Dotenv;
+// use Dotenv\Dotenv;
 
-$dotenv = Dotenv::createImmutable(__DIR__ . '/..'); 
-$dotenv->load();
+// $dotenv = Dotenv::createImmutable(__DIR__ . '/..'); 
+// $dotenv->load();
 
-// Sử dụng biến từ .env
-echo "App name: " . $_ENV['APP_NAME'];
+// // Sử dụng biến từ .env
+// echo "App name: " . $_ENV['APP_NAME'];
 
 // Xử lý reCAPTCHA nếu có
 if (isset($_POST['g-recaptcha-response'])) {
