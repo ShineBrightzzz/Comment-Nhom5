@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $avatar = "default-avatar.png"; // Ảnh đại diện mặc định
+    $avatar = trim($_POST['avatar']) ?: "https://ui-avatars.com/api/?name=" . urlencode($name) . "&background=random"; // Sử dụng URL mặc định nếu không nhập
 
     // Kiểm tra email đã tồn tại chưa
     $check_query = $conn->prepare("SELECT id FROM user WHERE email = ?");
@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($query->execute()) {
             $_SESSION['user_id'] = $id;
             $_SESSION['user_name'] = $name;
-            header("Location: /Comment-Nhom5/");
+            header("Location: /Comment-Nhom5/login");
             exit();
         } else {
             $error = "Lỗi đăng ký!";
@@ -64,6 +64,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="mb-3">
                 <label for="password" class="form-label">Mật khẩu:</label>
                 <input type="password" name="password" class="form-control" id="password" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="avatar" class="form-label">Avatar URL:</label>
+                <input type="text" name="avatar" class="form-control" id="avatar">
             </div>
 
             <button type="submit" class="btn btn-success w-100">Đăng ký</button>
