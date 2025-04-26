@@ -74,7 +74,7 @@ function validateCaptcha($recaptcha_response)
         exit();
     }
     
-    //  lưu session trong 10 phút
+    // Nếu xác minh thành công, lưu session trong 10 phút
     $_SESSION['captcha_verified_until'] = time() + 600; 
 }
 
