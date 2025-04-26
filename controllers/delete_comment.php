@@ -27,15 +27,32 @@ if (isset($_POST['comment_id']) || (isset($_GET['id']) && isset($_GET['post_id']
             $post_id = $comment['post_id'];
         }
         
-        // Delete comment and its replies
-        $stmt = $conn->prepare("DELETE FROM comment WHERE id = ? OR parent_id = ?");
-        $stmt->bind_param("ss", $comment_id, $comment_id); // Xóa luôn các comment con
+        // Function to recursively delete comments and their children
+        function deleteCommentRecursive($conn, $commentId) {
+            // Find all child comments
+            $stmt = $conn->prepare("SELECT id FROM comment WHERE parent_id = ?");
+            $stmt->bind_param("s", $commentId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            // Recursively delete all children first
+            while ($row = $result->fetch_assoc()) {
+                deleteCommentRecursive($conn, $row['id']);
+            }
+            
+            // Then delete the comment itself
+            $deleteStmt = $conn->prepare("DELETE FROM comment WHERE id = ?");
+            $deleteStmt->bind_param("s", $commentId);
+            $deleteStmt->execute();
+        }
         
-        if ($stmt->execute()) {
+        // Start the recursive deletion
+        try {
+            deleteCommentRecursive($conn, $comment_id);
             $success = true;
-            $message = "Đã xóa bình luận";
-        } else {
-            $message = "Lỗi khi xóa bình luận: " . $conn->error;
+            $message = "Đã xóa bình luận và tất cả phản hồi";
+        } catch (Exception $e) {
+            $message = "Lỗi khi xóa bình luận: " . $e->getMessage();
         }
     }
     

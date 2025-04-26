@@ -1,4 +1,142 @@
 $(document).ready(function () {
+    // AJAX Comment Submission
+    $(document).on('submit', '.comment-form, .ajax-comment-form', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const submitBtn = form.find('button[type="submit"]');
+        const originalBtnHtml = submitBtn.html();
+        const formData = form.serialize();
+        const postId = form.find('input[name="post_id"]').val();
+        const parentId = form.find('input[name="parent_id"]').val();
+        const textareaContent = form.find('textarea[name="content"]');
+        
+        // Disable the submit button and show loading state
+        submitBtn.html('<span class="spinner-border spinner-border-sm" role="status"></span>').prop('disabled', true);
+        
+        $.ajax({
+            url: '/Comment-Nhom5/controllers/add_comment.php',
+            method: 'POST',
+            data: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Clear the textarea
+                    textareaContent.val('');
+                    
+                    if (parentId) {
+                        // For replies, append the new comment to its parent's replies container
+                        const repliesContainer = $('#replies-' + parentId);
+                        
+                        // If this is the first reply, we may need to setup the container properly
+                        if (repliesContainer.children().length === 0) {
+                            // Add the tree line if not already present
+                            repliesContainer.addClass('position-relative');
+                            repliesContainer.prepend('<div class="comment-tree-line position-absolute" style="width: 2px; background-color: #dee2e6; top: 0; bottom: 0; left: 0;"></div>');
+                        }
+                        
+                        // Add the new reply to the beginning of the replies container
+                        repliesContainer.prepend(response.html);
+                        
+                        // Hide the reply form
+                        $('#reply-form-' + parentId).addClass('d-none');
+                        
+                        // Update reply count
+                        const replyCountBadge = repliesContainer.closest('.comment-container').find('.reply-count');
+                        if (replyCountBadge.length > 0) {
+                            // Extract current number and increment
+                            let currentCount = parseInt(replyCountBadge.text().split(' ')[0]);
+                            replyCountBadge.text((currentCount + 1) + ' phản hồi');
+                        } else {
+                            // Add new reply count badge
+                            const replyBtn = repliesContainer.closest('.comment-container').find('.toggle-reply');
+                            replyBtn.after('<span class="ms-2 badge bg-light text-dark reply-count">1 phản hồi</span>');
+                        }
+                    } else {
+                        // For new main comments, prepend to the comments section
+                        $('.comments-section h4').after(response.html);
+                    }
+                    
+                    // Initialize the new comment interactive elements
+                    initTextareas();
+                    
+                    // Reset the button
+                    submitBtn.html(originalBtnHtml).prop('disabled', false);
+                    
+                    // Reset textarea height
+                    textareaContent.css('height', 'auto');
+                } else if (response.type === 'limit_1' || response.type === 'limit_2') {
+                    // Handle rate limiting
+                    alert(response.message);
+                    submitBtn.html(originalBtnHtml).prop('disabled', false);
+                } else {
+                    // Handle other errors
+                    alert('Có lỗi xảy ra khi thêm bình luận');
+                    submitBtn.html(originalBtnHtml).prop('disabled', false);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error submitting comment:', error);
+                alert('Có lỗi xảy ra khi gửi bình luận');
+                submitBtn.html(originalBtnHtml).prop('disabled', false);
+            }
+        });
+    });
+
+    // AJAX Comment Edit
+    $(document).on('submit', 'form[action="../controllers/edit_comment.php"]', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const submitBtn = form.find('button.save-edit');
+        const originalBtnHtml = submitBtn.html();
+        const formData = form.serialize();
+        const commentId = form.find('input[name="comment_id"]').val();
+        const content = form.find('textarea[name="content"]').val();
+        const commentContent = $(`#content-${commentId}`);
+        
+        // Disable the submit button and show loading state
+        submitBtn.html('<span class="spinner-border spinner-border-sm" role="status"></span>').prop('disabled', true);
+        
+        $.ajax({
+            url: '../controllers/edit_comment.php',
+            method: 'POST',
+            data: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Update comment content
+                    commentContent.html(response.content);
+                    
+                    // Hide the edit form
+                    $(`#edit-form-${commentId}`).addClass('d-none');
+                    commentContent.removeClass('d-none');
+                    
+                    // Reset the button
+                    submitBtn.html(originalBtnHtml).prop('disabled', false);
+                    
+                    // Show success notification (optional)
+                    showNotification('Bình luận đã được cập nhật thành công', 'success');
+                } else {
+                    // Handle errors
+                    alert(response.message || 'Có lỗi xảy ra khi cập nhật bình luận');
+                    submitBtn.html(originalBtnHtml).prop('disabled', false);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error updating comment:', error);
+                alert('Có lỗi xảy ra khi cập nhật bình luận');
+                submitBtn.html(originalBtnHtml).prop('disabled', false);
+            }
+        });
+    });
+
     // Load bình luận chính
     $(document).on('click', '.load-more-comments', function () {
         const btn = $(this);
@@ -268,6 +406,43 @@ $(document).ready(function () {
                 sendButton.removeClass('top-50 translate-middle-y').addClass('top-0 mt-1');
             }
         }
+    }
+    
+    // Function to show notification
+    function showNotification(message, type = 'info') {
+        const notificationId = 'toast-notification-' + Date.now();
+        const bgClass = type === 'success' ? 'bg-success' : 
+                        type === 'error' ? 'bg-danger' : 
+                        type === 'warning' ? 'bg-warning' : 'bg-info';
+                        
+        const toast = `
+            <div id="${notificationId}" class="toast position-fixed bottom-0 end-0 m-3 ${bgClass} text-white" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Thông báo</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        `;
+        
+        // Add toast to document
+        $('body').append(toast);
+        
+        // Show the toast
+        const toastElement = $(`#${notificationId}`);
+        const bsToast = new bootstrap.Toast(toastElement, {
+            autohide: true,
+            delay: 3000
+        });
+        
+        bsToast.show();
+        
+        // Remove toast from DOM after it's hidden
+        toastElement.on('hidden.bs.toast', function() {
+            $(this).remove();
+        });
     }
     
     // Initialize textareas on page load

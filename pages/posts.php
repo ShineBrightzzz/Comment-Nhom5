@@ -41,6 +41,7 @@ $post = $query->get_result()->fetch_assoc();
                             </button>
                         </div>
                     </div>
+                    <div id="comment-error-container" class="alert alert-warning d-none"></div>
                     <?php if ($error == 'limit_1'): ?>
                         <div class="alert alert-warning">Bạn đã bình luận quá nhiều trong khoảng thời gian ngắn. Vui lòng xác nhận.</div>
                         <div class="g-recaptcha mb-2" data-sitekey="6LevCQsrAAAAAIYq4LfTqGrkkQ621YLLZmn_zMYJ"></div>
@@ -78,4 +79,38 @@ $post = $query->get_result()->fetch_assoc();
 
 <!-- Comment Functionality -->
 <script src="/Comment-Nhom5/utils/comments.js"></script>
+<script>
+$(document).ready(function() {
+    // Update all time-elapsed elements initially and start the interval
+    updateTimes();
+    setInterval(updateTimes, 60000); // Update every minute
+    
+    function updateTimes() {
+        $('.time-elapsed').each(function() {
+            const time = $(this).data('time');
+            $(this).text(timeAgo(time));
+        });
+    }
+    
+    function timeAgo(date) {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        const intervals = [
+            { label: 'năm', seconds: 31536000 },
+            { label: 'tháng', seconds: 2592000 },
+            { label: 'ngày', seconds: 86400 },
+            { label: 'giờ', seconds: 3600 },
+            { label: 'phút', seconds: 60 },
+            { label: 'giây', seconds: 1 }
+        ];
+        for (let i = 0; i < intervals.length; i++) {
+            const interval = intervals[i];
+            const count = Math.floor(seconds / interval.seconds);
+            if (count >= 1) {
+                return `${count} ${interval.label} trước`;
+            }
+        }
+        return 'vừa xong';
+    }
+});
+</script>
 
