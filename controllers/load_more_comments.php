@@ -1,48 +1,49 @@
 <?php
-    function getComments($conn, $post_id, $parent_id = NULL, $limit = NULL, $offset = 0) {
-        if ($limit !== NULL) {
-            $query = $conn->prepare("SELECT * FROM comment WHERE post_id = ? AND parent_id <=> ? ORDER BY created_at DESC LIMIT ? OFFSET ?");
-            $query->bind_param("ssii", $post_id, $parent_id, $limit, $offset);
-        } else {
-            $query = $conn->prepare("SELECT * FROM comment WHERE post_id = ? AND parent_id <=> ? ORDER BY created_at DESC");
-            $query->bind_param("ss", $post_id, $parent_id);
-        }
+session_start();
+include '../config/config.php';
+include '../utils/formatTime.php';
+include '../services/users.php';
+
+// Set header to JSON
+header('Content-Type: application/json');
+
+// Check if it's an AJAX request
+if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+    $post_id = $_POST['post_id'] ?? null;
+    $parent_id = $_POST['parent_id'] ?? null;
+    $offset = (int)$_POST['offset'] ?? 0;
+    $limit = (int)$_POST['limit'] ?? 5;
+    
+    // Initialize user cache
+    $userCache = [];
+    
+    if ($post_id) {
+        // Get more comments
+        $query = $conn->prepare("SELECT * FROM comment WHERE post_id = ? AND parent_id <=> ? ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        $query->bind_param("ssii", $post_id, $parent_id, $limit, $offset);
         $query->execute();
-        return $query->get_result();
-    }
-
-    function countComments($conn, $post_id, $parent_id = NULL) {
-        $query = $conn->prepare("SELECT COUNT(*) FROM comment WHERE post_id = ? AND parent_id <=> ?");
-        $query->bind_param("ss", $post_id, $parent_id);
-        $query->execute();
-        return $query->get_result()->fetch_row()[0];
-    }
-
-    function displayComments($conn, $post_id, $parent_id = NULL, $limit = 5, $initial = true) {
-        global $userCache;
-        if (!isset($userCache)) {
-            $userCache = [];
-        }
+        $comments = $query->get_result();
         
-        // Get total comment count for the current level
-        $total_comments = countComments($conn, $post_id, $parent_id);
+        $html = '';
+        $count = 0;
         
-        // Get limited comments for display
-        $comments = getComments($conn, $post_id, $parent_id, $limit, 0);
-        
-        // Count how many comments we're displaying
-        $displayed_comments = 0;
-
+        ob_start();
         while ($row = $comments->fetch_assoc()) {
-            $displayed_comments++;
+            $count++;
             $userName = getUserName($conn, $row['user_id'], $userCache);
             $userAvatar = getUserAvatar($conn, $row['user_id'], $userCache);
             $isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == $row['user_id'];
             $formattedTime = timeAgo($row['created_at']);
             
             // Check if this comment has replies
-            $reply_count = countComments($conn, $post_id, $row['id']);
-            $has_replies = $reply_count > 0;
+            $has_replies = false;
+            $reply_check = $conn->prepare("SELECT COUNT(*) FROM comment WHERE parent_id = ?");
+            $reply_check->bind_param("s", $row['id']);
+            $reply_check->execute();
+            $reply_count = $reply_check->get_result()->fetch_row()[0];
+            if ($reply_count > 0) {
+                $has_replies = true;
+            }
     
             echo '<div class="comment-container mb-3" id="comment-' . $row['id'] . '">';
             
@@ -133,47 +134,61 @@
             echo '</div>'; // card-body
             echo '</div>'; // card
     
-            // Display nested replies with indentation and proper connecting lines
+            // Display nested replies placeholder
             if ($has_replies) {
-                // This container will hold all the child comments
                 echo '<div class="ms-3 ps-4 position-relative replies-container" id="replies-' . $row['id'] . '">';
-                
-                // Add continuous vertical line from parent to connect all children - runs the full height
                 echo '<div class="comment-tree-line position-absolute" style="width: 2px; background-color: #dee2e6; top: 0; bottom: 0; left: 0;"></div>';
                 
-                // For replies, only show 3 initially
-                $reply_limit = 3;
-                
-                // Recursively display child comments with a limit
-                displayComments($conn, $post_id, $row['id'], $reply_limit, true);
-                
-                // If there are more replies than shown, add "Load More" button
-                if ($reply_count > $reply_limit) {
-                    echo '<div class="mt-2 mb-2 load-more-container ps-2">';
-                    echo '<button class="btn btn-sm btn-outline-primary load-more-replies" data-parent-id="' . $row['id'] . '" data-post-id="' . $post_id . '" data-offset="' . $reply_limit . '">';
-                    echo 'Xem thêm ' . ($reply_count - $reply_limit) . ' phản hồi';
-                    echo '</button>';
-                    echo '</div>';
-                }
+                // For replies loaded in AJAX, we don't pre-load any replies
+                // Add load replies button
+                echo '<div class="mt-2 mb-2 load-more-container ps-2">';
+                echo '<button class="btn btn-sm btn-outline-primary load-more-replies" 
+                      data-parent-id="' . $row['id'] . '"
+                      data-post-id="' . $post_id . '"
+                      data-offset="0">';
+                echo 'Xem ' . $reply_count . ' phản hồi';
+                echo '</button>';
+                echo '</div>';
                 
                 echo '</div>';
             } else {
-                // Even if there are no replies, we'll create a placeholder for consistent styling
-                echo '<div class="ms-3 ps-4" id="replies-' . $row['id'] . '">';
-                displayComments($conn, $post_id, $row['id'], 3, true);
-                echo '</div>';
+                echo '<div class="ms-3 ps-4" id="replies-' . $row['id'] . '"></div>';
             }
             
             echo '</div>'; // comment-container
         }
+        $html = ob_get_clean();
         
-        // Add "Load More" button for main comments if there are more to show
-        if ($parent_id === NULL && $initial && $total_comments > $displayed_comments) {
-            echo '<div class="mt-3 mb-4 load-more-container">';
-            echo '<button class="btn btn-outline-primary load-more-comments" data-post-id="' . $post_id . '" data-offset="' . $displayed_comments . '">';
-            echo 'Xem thêm ' . ($total_comments - $displayed_comments) . ' bình luận';
-            echo '</button>';
-            echo '</div>';
+        // Get total count for pagination
+        if ($parent_id === null) {
+            $query = $conn->prepare("SELECT COUNT(*) FROM comment WHERE post_id = ? AND parent_id IS NULL");
+            $query->bind_param("s", $post_id);
+        } else {
+            $query = $conn->prepare("SELECT COUNT(*) FROM comment WHERE post_id = ? AND parent_id = ?");
+            $query->bind_param("ss", $post_id, $parent_id);
         }
+        $query->execute();
+        $total = $query->get_result()->fetch_row()[0];
+        
+        // Calculate remaining comments
+        $remaining = $total - ($offset + $count);
+        
+        // Response data
+        $response = [
+            'status' => 'success',
+            'html' => $html,
+            'count' => $count,
+            'offset' => $offset + $count,
+            'remaining' => $remaining,
+            'hasMore' => $remaining > 0,
+        ];
+        
+        echo json_encode($response);
+        exit;
     }
+}
+
+// If not AJAX or missing parameters
+http_response_code(400);
+echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
 ?>

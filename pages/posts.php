@@ -73,4 +73,8 @@ $post = $query->get_result()->fetch_assoc();
 
 <script src="https://www.google.com/recaptcha/api.js"></script>
 
-<script src="../utils/scripts.js"></script>
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<!-- Comment Functionality -->
+<script src="/Comment-Nhom5/utils/comments.js"></script>
