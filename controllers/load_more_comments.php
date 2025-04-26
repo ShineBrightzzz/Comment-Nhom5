@@ -33,7 +33,6 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
             $userName = getUserName($conn, $row['user_id'], $userCache);
             $userAvatar = getUserAvatar($conn, $row['user_id'], $userCache);
             $isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == $row['user_id'];
-            $formattedTime = timeAgo($row['created_at']);
             
             // Check if this comment has replies
             $has_replies = false;
@@ -73,7 +72,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
             echo '</div>';
             echo '<div>';
             echo '<div class="fw-bold">' . htmlspecialchars($userName) . '</div>';
-            echo '<div class="text-muted small">' . $formattedTime . '</div>';
+            echo '<div class="text-muted small time-elapsed" data-time="' . $row['created_at'] . '">' . timeAgo($row['created_at']) . '</div>';
             echo '</div>';
             echo '</div>';
             
@@ -148,6 +147,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
                       data-offset="0">';
                 echo 'Xem ' . $reply_count . ' phản hồi';
                 echo '</button>';
+                
                 echo '</div>';
                 
                 echo '</div>';
@@ -161,10 +161,10 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
         
         // Get total count for pagination
         if ($parent_id === null) {
-            $query = $conn->prepare("SELECT COUNT(*) FROM comment WHERE post_id = ? AND parent_id IS NULL");
+            $query = $conn->prepare("SELECT COUNT(id) FROM comment WHERE post_id = ? AND parent_id IS NULL");
             $query->bind_param("s", $post_id);
         } else {
-            $query = $conn->prepare("SELECT COUNT(*) FROM comment WHERE post_id = ? AND parent_id = ?");
+            $query = $conn->prepare("SELECT COUNT(id) FROM comment WHERE post_id = ? AND parent_id = ?");
             $query->bind_param("ss", $post_id, $parent_id);
         }
         $query->execute();

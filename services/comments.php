@@ -72,7 +72,7 @@
             echo '</div>';
             echo '<div>';
             echo '<div class="fw-bold">' . htmlspecialchars($userName) . '</div>';
-            echo '<div class="text-muted small">' . $formattedTime . '</div>';
+            echo '<div class="text-muted small time-elapsed" data-time="' . $row['created_at'] . '">' . timeAgo($row['created_at']) . '</div>';
             echo '</div>';
             echo '</div>';
             

@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $avatar = trim("https://ui-avatars.com/api/?name=" . urlencode($name) . "&background=random"); // Sử dụng URL mặc định nếu không nhập
+    $avatar = trim("https://ui-avatars.com/api/?name=" . urlencode($name) . "&background=random"); 
     
     // Kiểm tra email đã tồn tại chưa
     $check_query = $conn->prepare("SELECT id FROM user WHERE email = ?");

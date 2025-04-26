@@ -3,7 +3,7 @@ function renderCommentItem($conn, $post_id, $comment) {
     ob_start(); ?>
     <div class="comment-item">
         <strong><?= htmlspecialchars($comment['user_id']) ?></strong>: <?= htmlspecialchars($comment['content']) ?>
-        <br><small><?= $comment['created_at'] ?></small>
+        <br><small class="time-elapsed" data-time="<?= $comment['created_at'] ?>"><?= $comment['created_at'] ?></small>
 
         <?php if (isset($_SESSION['user_id'])): ?>
             <form method="post" action="comment.php" class="reply-form">

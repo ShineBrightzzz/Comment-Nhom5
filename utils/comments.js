@@ -201,22 +201,41 @@ $(document).ready(function () {
     $(document).on('click', '.delete-comment', function() {
         if (confirm('Bạn có chắc muốn xóa bình luận này?')) {
             const commentId = $(this).data('id');
+            const commentContainer = $(`#comment-${commentId}`);
             
-            // Create a form and submit it
-            const form = $('<form></form>').attr({
-                'method': 'POST',
-                'action': '../controllers/delete_comment.php'
+            $.ajax({
+                url: '../controllers/delete_comment.php',
+                method: 'POST',
+                data: {
+                    comment_id: commentId
+                },
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                dataType: 'json',
+                beforeSend: function() {
+                    // Hiển thị hiệu ứng đang xóa
+                    commentContainer.addClass('deleting').css('opacity', '0.5');
+                },
+                success: function(response) {
+                    console.log('Delete response:', response);
+                    if (response.success) {
+                        // Xóa bình luận khỏi DOM với hiệu ứng
+                        commentContainer.slideUp(400, function() {
+                            $(this).remove();
+                        });
+                    } else {
+                        // Hiển thị lỗi
+                        alert(response.message || 'Có lỗi xảy ra khi xóa bình luận');
+                        commentContainer.removeClass('deleting').css('opacity', '1');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error deleting comment:', error);
+                    alert('Có lỗi xảy ra khi xóa bình luận');
+                    commentContainer.removeClass('deleting').css('opacity', '1');
+                }
             });
-            
-            const input = $('<input>').attr({
-                'type': 'hidden',
-                'name': 'comment_id',
-                'value': commentId
-            });
-            
-            form.append(input);
-            $('body').append(form);
-            form.submit();
         }
     });
     

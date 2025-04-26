@@ -78,3 +78,4 @@ $post = $query->get_result()->fetch_assoc();
 
 <!-- Comment Functionality -->
 <script src="/Comment-Nhom5/utils/comments.js"></script>
+

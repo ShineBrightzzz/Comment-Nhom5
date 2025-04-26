@@ -4,6 +4,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..'); 
 $dotenv->load();
 
+
+
 // Lấy thông tin từ .env
 $servername = $_ENV['DB_HOST'];
 $username = $_ENV['DB_USER'];
