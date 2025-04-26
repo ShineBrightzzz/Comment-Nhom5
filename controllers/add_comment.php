@@ -21,12 +21,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
     $comment_count = $query_count_cmt->get_result()->fetch_row()[0];
 
     if ($comment_count >= 5) {
-        // Yêu cầu xác minh reCAPTCHA
-        if (empty($_POST['g-recaptcha-response'])) {
-            header("Location: /Comment-Nhom5/posts/{$post_id}?error=limit_1");
-            exit();
+        if (!isCaptchaVerified()) {
+            if (empty($_POST['g-recaptcha-response'])) {
+                header("Location: /Comment-Nhom5/posts/{$post_id}?error=limit_1");
+                exit();
+            }
+            validateCaptcha($_POST['g-recaptcha-response']);
         }
-        validateCaptcha($_POST['g-recaptcha-response']);
     }
 
     // Check spam nội dung
@@ -37,11 +38,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
     $comment_count_same = $query_count_cmt_same->get_result()->fetch_row()[0];
 
     if ($comment_count_same >= 5) {
-        if (empty($_POST['g-recaptcha-response'])) {
-            header("Location: /Comment-Nhom5/posts/{$post_id}?error=limit_2");
-            exit();
+        if (!isCaptchaVerified()) {
+            if (empty($_POST['g-recaptcha-response'])) {
+                header("Location: /Comment-Nhom5/posts/{$post_id}?error=limit_2");
+                exit();
+            }
+            validateCaptcha($_POST['g-recaptcha-response']);
         }
-        validateCaptcha($_POST['g-recaptcha-response']);
     }
 
     // Insert bình luận
@@ -50,8 +53,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
     $query->execute();
 }
 
+// Hàm kiểm tra session captcha còn hiệu lực không
+function isCaptchaVerified()
+{
+    return isset($_SESSION['captcha_verified_until']) && $_SESSION['captcha_verified_until'] > time();
+}
+
 // Hàm xác minh captcha
-function validateCaptcha($recaptcha_response) {
+function validateCaptcha($recaptcha_response)
+{
     $secret = $_ENV['RECAPTCHA_SECRET'];
     if (!$secret) {
         header("Location: /Comment-Nhom5/posts/{$_POST['post_id']}?error=recaptcha");
@@ -63,7 +73,11 @@ function validateCaptcha($recaptcha_response) {
         header("Location: /Comment-Nhom5/posts/{$_POST['post_id']}?error=recaptcha");
         exit();
     }
+    
+    //  lưu session trong 10 phút
+    $_SESSION['captcha_verified_until'] = time() + 600; 
 }
 
 header("Location: /Comment-Nhom5/posts/{$post_id}");
 exit();
+?>

@@ -6,7 +6,7 @@ $post_id = $_POST['posts'] ?? NULL;
 if (isset($_POST['comment_id']) || (isset($_GET['id']) && isset($_GET['post_id']))) {
     // Get comment ID from either POST or GET
     $comment_id = $_POST['comment_id'] ?? $_GET['id'];
-    $post_id = NULL; // Will be fetched from the comment
+    $post_id = NULL; 
     
     if (isset($_GET['post_id'])) {
         $post_id = $_GET['post_id'];
