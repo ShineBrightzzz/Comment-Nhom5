@@ -4,11 +4,10 @@ include '../config/config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
-    $username = trim($_POST['name']);
     $password = trim($_POST['password']);
 
-    $query = $conn->prepare("SELECT * FROM user WHERE email = ? or name = ?");
-    $query->bind_param("ss", $email, $username);
+    $query = $conn->prepare("SELECT * FROM user WHERE email = ?");
+    $query->bind_param("s", $email);
     $query->execute();
     $result = $query->get_result();
 

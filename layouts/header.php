@@ -14,10 +14,6 @@ session_start();
   <meta name="user-id" content="<?php echo $_SESSION['user_id']; ?>">
   <?php endif; ?>
   
-  <!-- Pusher configuration -->
-  <meta name="pusher-key" content="<?php echo $_ENV['PUSHER_APP_KEY'] ?? ''; ?>">
-  <meta name="pusher-cluster" content="<?php echo $_ENV['PUSHER_APP_CLUSTER'] ?? 'ap1'; ?>">
-  
   <title>Chi tiết bài viết</title>
   
   <!-- Bootstrap CSS -->
@@ -32,13 +28,7 @@ session_start();
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   
-  <!-- Pusher JavaScript library -->
-  <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
   
-  <!-- Notification sound -->
-  <audio id="notification-sound" preload="auto">
-      <source src="/Comment-Nhom5/assets/notification.mp3" type="audio/mpeg">
-  </audio>
 </head>
 <body>
 

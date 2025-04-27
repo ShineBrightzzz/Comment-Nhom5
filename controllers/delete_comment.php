@@ -24,10 +24,27 @@ if (isset($_POST['comment_id']) || (isset($_GET['id']) && isset($_GET['post_id']
             $post_id = $comment['post_id'];
         }
         
-        // Delete comment and its replies
-        $stmt = $conn->prepare("DELETE FROM comment WHERE id = ? OR parent_id = ?");
-        $stmt->bind_param("ss", $comment_id, $comment_id); // Xóa luôn các comment con
-        $stmt->execute();
+        // Hàm xóa comment theo cách đệ quy
+        function deleteCommentRecursively($conn, $comment_id) {
+            // Tìm tất cả các comment con
+            $stmt = $conn->prepare("SELECT id FROM comment WHERE parent_id = ?");
+            $stmt->bind_param("s", $comment_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            // Xóa các comment con trước (đệ quy)
+            while ($child = $result->fetch_assoc()) {
+                deleteCommentRecursively($conn, $child['id']);
+            }
+            
+            // Sau khi đã xóa hết các comment con, xóa comment hiện tại
+            $delete_stmt = $conn->prepare("DELETE FROM comment WHERE id = ?");
+            $delete_stmt->bind_param("s", $comment_id);
+            $delete_stmt->execute();
+        }
+        
+        // Gọi hàm xóa comment đệ quy
+        deleteCommentRecursively($conn, $comment_id);
         
         // Return JSON response for AJAX requests
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
