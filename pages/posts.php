@@ -80,6 +80,8 @@ $post = $query->get_result()->fetch_assoc();
 <!-- Comment Functionality -->
 <script src="/Comment-Nhom5/utils/comments.js"></script>
 
+<script src="../utils/formatTime.js"></script>
+
 <script>
 function enableSubmit(token) {
     // After reCAPTCHA verification, submit the form
