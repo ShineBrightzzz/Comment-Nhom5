@@ -9,6 +9,7 @@ use Dotenv\Dotenv;
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 
+
 // Check if it's an AJAX request
 $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
@@ -33,7 +34,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
                     echo json_encode([
                         'status' => 'error',
                         'type' => 'limit_1',
-                        'message' => 'Bạn đã bình luận quá nhiều trong thời gian ngắn. Vui lòng xác nhận.'
+                        'message' => 'Bạn đã bình luận quá nhiều trong thời gian ngắn. Vui lòng xác nhận.',
+                        'redirect' => "/Comment-Nhom5/posts/{$post_id}?error=limit_1"
                     ]);
                     exit();
                 } else {
@@ -60,7 +62,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
                     echo json_encode([
                         'status' => 'error',
                         'type' => 'limit_2',
-                        'message' => 'Bạn đã bình luận quá giống nhau. Vui lòng xác nhận.'
+                        'message' => 'Bạn đã bình luận quá giống nhau. Vui lòng xác nhận.',
+                        'redirect' => "/Comment-Nhom5/posts/{$post_id}?error=limit_2"
                     ]);
                     exit();
                 } else {
@@ -257,20 +260,34 @@ function isCaptchaVerified()
 // Hàm xác minh captcha
 function validateCaptcha($recaptcha_response)
 {
-    $secret = $_ENV['RECAPTCHA_SECRET'];
-    if (!$secret) {
+    $secret = $_ENV['RECAPTCHA_SECRET_KEY'] ?? '';
+    
+    if (empty($secret)) {
+        error_log('reCAPTCHA secret key is missing');
         header("Location: /Comment-Nhom5/posts/{$_POST['post_id']}?error=recaptcha");
         exit();
     }
-    $verifyResponse = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=$secret&response=$recaptcha_response");
+    
+    $verifyResponse = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$secret}&response={$recaptcha_response}");
+    
+    if (!$verifyResponse) {
+        error_log('Could not connect to reCAPTCHA verification service');
+        header("Location: /Comment-Nhom5/posts/{$_POST['post_id']}?error=recaptcha");
+        exit();
+    }
+    
     $responseData = json_decode($verifyResponse);
+    
     if (!$responseData->success) {
+        error_log('reCAPTCHA verification failed: ' . json_encode($responseData));
         header("Location: /Comment-Nhom5/posts/{$_POST['post_id']}?error=recaptcha");
         exit();
     }
     
     // Nếu xác minh thành công, lưu session trong 10 phút
-    $_SESSION['captcha_verified_until'] = time() + 600; 
+    $_SESSION['captcha_verified_until'] = time() + 600;
+    
+    return true;
 }
 
 if (!$isAjax) {

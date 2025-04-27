@@ -68,10 +68,14 @@ $(document).ready(function () {
                     
                     // Reset textarea height
                     textareaContent.css('height', 'auto');
-                } else if (response.type === 'limit_1' || response.type === 'limit_2') {
-                    // Handle rate limiting
-                    alert(response.message);
-                    submitBtn.html(originalBtnHtml).prop('disabled', false);
+                } else if (response.type === 'limit_1' || response.type === 'limit_2' || response.type === 'recaptcha') {
+                    // Chuyển hướng người dùng khi gặp lỗi cần xác minh captcha
+                    if (response.redirect) {
+                        window.location.href = response.redirect;
+                    } else {
+                        // Fallback nếu không có URL chuyển hướng rõ ràng
+                        window.location.href = `/Comment-Nhom5/posts/${postId}?error=${response.type}`;
+                    }
                 } else {
                     // Handle other errors
                     alert('Có lỗi xảy ra khi thêm bình luận');

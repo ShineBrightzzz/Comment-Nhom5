@@ -13,7 +13,6 @@ $query = $conn->prepare("SELECT * FROM post WHERE id = ?");
 $query->bind_param("s", $post_id);
 $query->execute();
 $post = $query->get_result()->fetch_assoc();
-
 ?>
 
 <div class="container my-5">    
@@ -31,11 +30,11 @@ $post = $query->get_result()->fetch_assoc();
         <?php if (isset($_SESSION['user_id'])): ?>
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
-                <form method="post" action="../controllers/add_comment.php" class="comment-form">
+                <form id="commentForm" method="post" action="../controllers/add_comment.php" class="comment-form">
                     <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
                     <div class="mb-3">
                         <div class="position-relative">
-                            <textarea name="content" class="form-control rounded-pill pe-5 py-2 auto-expand-textarea" style="resize: none; overflow-y: hidden;" required placeholder="Viết bình luận..." rows="1"></textarea>
+                            <textarea name="content" class="form-control rounded pe-5 py-2 auto-expand-textarea" style="resize: none; overflow-y: hidden;" required placeholder="Viết bình luận..." rows="1"></textarea>
                             <button type="submit" class="btn position-absolute top-0 end-0 mt-1 me-2" style="background: none; border: none; color: #0d6efd;">
                                 <i class="bi bi-send-fill"></i>
                             </button>
@@ -44,12 +43,13 @@ $post = $query->get_result()->fetch_assoc();
                     <div id="comment-error-container" class="alert alert-warning d-none"></div>
                     <?php if ($error == 'limit_1'): ?>
                         <div class="alert alert-warning">Bạn đã bình luận quá nhiều trong khoảng thời gian ngắn. Vui lòng xác nhận.</div>
-                        <div class="g-recaptcha mb-2" data-sitekey="6LevCQsrAAAAAIYq4LfTqGrkkQ621YLLZmn_zMYJ"></div>
+                        <div class="g-recaptcha mb-2" data-sitekey="6Ld_mCYrAAAAAKF2djMSAAiZBcEqTxCEE8U-8GX8" data-callback="enableSubmit"></div>
                     <?php elseif ($error == 'limit_2'): ?>
                         <div class="alert alert-warning">Bạn đã bình luận quá giống nhau. Vui lòng xác nhận.</div>
-                        <div class="g-recaptcha mb-2" data-sitekey="6LevCQsrAAAAAIYq4LfTqGrkkQ621YLLZmn_zMYJ"></div>
+                        <div class="g-recaptcha mb-2" data-sitekey="6Ld_mCYrAAAAAKF2djMSAAiZBcEqTxCEE8U-8GX8" data-callback="enableSubmit"></div>
                     <?php elseif ($error == 'recaptcha'): ?>
                         <div class="alert alert-danger">Vui lòng xác minh bạn là con người.</div>
+                        <div class="g-recaptcha mb-2" data-sitekey="6Ld_mCYrAAAAAKF2djMSAAiZBcEqTxCEE8U-8GX8" data-callback="enableSubmit"></div>
                     <?php endif; ?>
                 </form>
             </div>
@@ -72,45 +72,17 @@ $post = $query->get_result()->fetch_assoc();
 <?php endif; ?>
 </div>
 
-<script src="https://www.google.com/recaptcha/api.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
 <!-- Bootstrap Icons -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 <!-- Comment Functionality -->
 <script src="/Comment-Nhom5/utils/comments.js"></script>
-<script>
-$(document).ready(function() {
-    // Update all time-elapsed elements initially and start the interval
-    updateTimes();
-    setInterval(updateTimes, 60000); // Update every minute
-    
-    function updateTimes() {
-        $('.time-elapsed').each(function() {
-            const time = $(this).data('time');
-            $(this).text(timeAgo(time));
-        });
-    }
-    
-    function timeAgo(date) {
-        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-        const intervals = [
-            { label: 'năm', seconds: 31536000 },
-            { label: 'tháng', seconds: 2592000 },
-            { label: 'ngày', seconds: 86400 },
-            { label: 'giờ', seconds: 3600 },
-            { label: 'phút', seconds: 60 },
-            { label: 'giây', seconds: 1 }
-        ];
-        for (let i = 0; i < intervals.length; i++) {
-            const interval = intervals[i];
-            const count = Math.floor(seconds / interval.seconds);
-            if (count >= 1) {
-                return `${count} ${interval.label} trước`;
-            }
-        }
-        return 'vừa xong';
-    }
-});
-</script>
 
+<script>
+function enableSubmit(token) {
+    // After reCAPTCHA verification, submit the form
+    document.getElementById('commentForm').submit();
+}
+</script>
