@@ -116,7 +116,8 @@
                 }
                 
                 echo '<div class="reply-form d-none mt-2" id="reply-form-' . $row['id'] . '">';
-                echo '<form method="post" action="../controllers/add_comment.php">';
+                // Change to ajax-comment-form class for AJAX submission
+                echo '<form method="post" action="../controllers/add_comment.php" class="ajax-comment-form">';
                 echo '<input type="hidden" name="post_id" value="' . $post_id . '">';
                 echo '<input type="hidden" name="parent_id" value="' . $row['id'] . '">';
                 echo '<div class="position-relative">';
