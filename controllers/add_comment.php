@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
     // Check spam time
     $time_limit = 60;
     $query_count_cmt = $conn->prepare("SELECT COUNT(*) FROM comment WHERE user_id = ? AND post_id = ? AND created_at > NOW() - INTERVAL ? SECOND");
-    $query_count_cmt->bind_param("iis", $user_id, $post_id, $time_limit);
+    $query_count_cmt->bind_param("iss", $user_id, $post_id, $time_limit);
     $query_count_cmt->execute();
     $comment_count = $query_count_cmt->get_result()->fetch_row()[0];
 
@@ -75,16 +75,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
         }
     }
 
-    // Insert bình luận
-    $query = $conn->prepare("INSERT INTO comment (id, content, user_id, post_id, parent_id) VALUES (UUID(), ?, ?, ?, ?)");
-    $query->bind_param("ssss", $content, $user_id, $post_id, $parent_id);
+    // Tạo UUID trước và lưu vào biến
+    $comment_uuid = $conn->query("SELECT UUID()")->fetch_row()[0];
+    
+    // Insert bình luận với UUID đã tạo
+    $query = $conn->prepare("INSERT INTO comment (id, content, user_id, post_id, parent_id) VALUES (?, ?, ?, ?, ?)");
+    $query->bind_param("sssss", $comment_uuid, $content, $user_id, $post_id, $parent_id);
     
     if ($query->execute()) {
-        // If comment added successfully
-        $comment_id = $conn->insert_id;
+        // Nếu thêm bình luận thành công
         
-        // Get the new comment data
-        $query = $conn->prepare("SELECT * FROM comment WHERE id = LAST_INSERT_ID()");
+        // Lấy dữ liệu comment mới bằng UUID đã biết
+        $query = $conn->prepare("SELECT * FROM comment WHERE id = ?");
+        $query->bind_param("s", $comment_uuid);
         $query->execute();
         $new_comment = $query->get_result()->fetch_assoc();
         
@@ -159,7 +162,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
                             </div>
                         </div>
                     </div>
-                    <div class="ms-3 ps-4" id="replies-<?= $new_comment['id'] ?>"></div>
+                    <div class="ms-3 ps-4 position-relative" id="replies-<?= $new_comment['id'] ?>">
+                        <!-- Container for nested replies -->
+                    </div>
                 </div>
                 <?php
             } else {
@@ -224,6 +229,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
                             </div>
                         </div>
                     </div>
+                    <div class="ms-3 ps-4 position-relative" id="replies-<?= $new_comment['id'] ?>">
+                        <!-- Container for nested replies -->
+                    </div>
                 </div>
                 <?php
             }
@@ -235,7 +243,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
                 'status' => 'success',
                 'html' => $comment_html,
                 'comment' => $new_comment,
-                'parent_id' => $parent_id
+                'parent_id' => $parent_id,
+                'comment_id' => $comment_uuid, // Add the comment ID for easier reference in JavaScript
+                'user_name' => $userName // Include user name for display purposes
             ]);
             exit();
         }
@@ -244,7 +254,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
             header('Content-Type: application/json');
             echo json_encode([
                 'status' => 'error',
-                'message' => 'Không thể thêm bình luận'
+                'message' => 'Không thể thêm bình luận',
+                'sql_error' => $conn->error 
             ]);
             exit();
         }
@@ -285,7 +296,7 @@ function validateCaptcha($recaptcha_response)
     }
     
     // Nếu xác minh thành công, lưu session trong 10 phút
-    $_SESSION['captcha_verified_until'] = time() + 600;
+    $_SESSION['captcha_verified_until'] = time() + 60;
     
     return true;
 }

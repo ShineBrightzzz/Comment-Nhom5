@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($stmt->execute()) {
             if ($isAjax) {
+                // Set header to JSON
                 header('Content-Type: application/json');
                 echo json_encode([
                     'status' => 'success',

@@ -3,6 +3,9 @@ session_start();
 include '../config/config.php';
 $post_id = $_POST['posts'] ?? NULL;
 
+// Check if it's an AJAX request
+$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
 // Handling both GET and POST requests for backward compatibility
 if (isset($_POST['comment_id']) || (isset($_GET['id']) && isset($_GET['post_id']))) {
     // Get comment ID from either POST or GET
@@ -57,9 +60,14 @@ if (isset($_POST['comment_id']) || (isset($_GET['id']) && isset($_GET['post_id']
     }
     
     // Return JSON response for AJAX requests
-    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+    if ($isAjax) {
         header('Content-Type: application/json');
-        echo json_encode(['success' => $success, 'message' => $message]);
+        echo json_encode([
+            'success' => $success,
+            'message' => $message,
+            'comment_id' => $comment_id,
+            'post_id' => $post_id
+        ]);
         exit;
     }
 

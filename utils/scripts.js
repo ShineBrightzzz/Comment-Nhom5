@@ -243,14 +243,28 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.toggle-reply').forEach(btn => {
             if (!btn.hasListener) {
                 btn.hasListener = true;
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault(); // Ngăn hành vi mặc định
+                    e.stopPropagation(); // Ngăn sự kiện lan truyền
+                    
+                    console.log('Toggle reply clicked for comment ID:', this.dataset.id);
                     const commentId = this.dataset.id;
                     const replyForm = document.getElementById(`reply-form-${commentId}`);
+                    
+                    // Đóng tất cả các form trả lời khác
+                    document.querySelectorAll('.reply-form:not(.d-none)').forEach(form => {
+                        if (form.id !== `reply-form-${commentId}`) {
+                            form.classList.add('d-none');
+                        }
+                    });
+                    
                     if (replyForm) {
                         replyForm.classList.toggle('d-none');
                         if (!replyForm.classList.contains('d-none')) {
                             replyForm.querySelector('textarea')?.focus();
                         }
+                    } else {
+                        console.error(`Reply form #reply-form-${commentId} not found`);
                     }
                 });
             }
@@ -326,6 +340,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // QUAN TRỌNG: Xóa bỏ đăng ký sự kiện trùng lặp - Chỉ khởi tạo một lần
+    // Các sự kiện dưới đây đã được xử lý trong hàm initializeNewCommentElements
+    // Xóa bỏ đoạn code dưới đây để tránh đăng ký sự kiện trùng lặp
+    /*
     // Toggle reply form
     document.querySelectorAll('.toggle-reply').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -402,6 +420,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    */
     
     // Initialize all comment elements
     initializeNewCommentElements();

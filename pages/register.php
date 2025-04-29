@@ -4,7 +4,6 @@ include '../config/config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = uniqid(); // Tạo ID ngẫu nhiên
-    $username = trim($_POST['username']);
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
@@ -20,8 +19,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error = "Email đã được sử dụng!";
     } else {
         // Chèn người dùng mới vào database
-        $query = $conn->prepare("INSERT INTO user (id, username, name, email, password, avatar) VALUES (?, ?, ?, ?, ?, ?)");
-        $query->bind_param("sssss", $id, $username, $name, $email, $password, $avatar);
+        $query = $conn->prepare("INSERT INTO user (id, name, email, password, avatar) VALUES (?, ?, ?, ?, ?)");
+        $query->bind_param("sssss", $id, $name, $email, $password, $avatar);
         if ($query->execute()) {
             $_SESSION['user_id'] = $id;
             $_SESSION['user_name'] = $name;
@@ -52,10 +51,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
 
         <form method="post">
-            <div class="mb-3">
-                <label for="username" class="form-label">Tên:</label>
-                <input type="text" name="username" class="form-control" id="username" required>
-            </div>
 
             <div class="mb-3">
                 <label for="name" class="form-label">Tên:</label>

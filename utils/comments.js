@@ -31,6 +31,10 @@ $(document).ready(function () {
                         // For replies, append the new comment to its parent's replies container
                         const repliesContainer = $('#replies-' + parentId);
                         
+                        // Log debug information to console
+                        console.log('Adding reply to parent:', parentId);
+                        console.log('Reply container:', repliesContainer.length ? 'Found' : 'Not found');
+                        
                         // If this is the first reply, we may need to setup the container properly
                         if (repliesContainer.children().length === 0) {
                             // Add the tree line if not already present
@@ -40,6 +44,24 @@ $(document).ready(function () {
                         
                         // Add the new reply to the beginning of the replies container
                         repliesContainer.prepend(response.html);
+                        
+                        // Đảm bảo replies container của comment mới được thêm vào cũng đã sẵn sàng cho nested replies
+                        const newCommentId = response.comment_id;
+                        const newRepliesContainer = $('#replies-' + newCommentId);
+                        
+                        console.log('New comment ID:', newCommentId);
+                        console.log('New replies container:', newRepliesContainer.length ? 'Created' : 'Not found');
+                        
+                        // Đảm bảo container cho nested reply đã được thiết lập đúng
+                        if (newRepliesContainer.length > 0) {
+                            newRepliesContainer.addClass('initialized ms-3 ps-4');
+                            
+                            // Đảm bảo có đường kẻ dọc cho container nested reply
+                            if (newRepliesContainer.find('.comment-tree-line').length === 0) {
+                                newRepliesContainer.addClass('position-relative');
+                                newRepliesContainer.prepend('<div class="comment-tree-line position-absolute" style="width: 2px; background-color: #dee2e6; top: 0; bottom: 0; left: 0;"></div>');
+                            }
+                        }
                         
                         // Hide the reply form
                         $('#reply-form-' + parentId).addClass('d-none');
@@ -58,10 +80,18 @@ $(document).ready(function () {
                     } else {
                         // For new main comments, prepend to the comments section
                         $('.comments-section h4').after(response.html);
+                        
+                        // Đảm bảo container cho replies đã sẵn sàng
+                        const newCommentId = response.comment_id;
+                        const newRepliesContainer = $('#replies-' + newCommentId);
+                        
+                        if (newRepliesContainer.length > 0) {
+                            newRepliesContainer.addClass('initialized ms-3 ps-4');
+                        }
                     }
                     
                     // Initialize the new comment interactive elements
-                    initTextareas();
+                    initNewComment();
                     
                     // Reset the button
                     submitBtn.html(originalBtnHtml).prop('disabled', false);
@@ -171,8 +201,8 @@ $(document).ready(function () {
                     // Insert new comments before the "load more" button
                     loadMoreContainer.before(data.html);
                     
-                    // Initialize textareas
-                    initTextareas();
+                    // Initialize textareas and other event handlers for newly loaded comments
+                    initNewComment();
                     
                     if (data.hasMore) {
                         // Update button with new offset
@@ -240,8 +270,8 @@ $(document).ready(function () {
                         repliesContainer.append(data.html);
                     }
                     
-                    // Initialize textareas
-                    initTextareas();
+                    // Initialize textareas and other event handlers for newly loaded replies
+                    initNewComment();
                     
                     if (data.hasMore) {
                         // Create or update "load more" button
@@ -306,13 +336,66 @@ $(document).ready(function () {
         });
     });
     
-    // Toggle reply form
-    $(document).on('click', '.toggle-reply', function() {
+    // Initialize all event handlers for any new comments (used for AJAX-loaded content)
+    function initNewComment() {
+        // Initialize auto-expanding textareas
+        initTextareas();
+        
+        // Make sure all reply forms in newly created comments work properly
+        $('.comment-container').each(function() {
+            if (!$(this).data('initialized')) {
+                $(this).data('initialized', true);
+                
+                // Ensure all ajax-comment-form inside this comment container have proper event handling
+                $(this).find('.ajax-comment-form').each(function() {
+                    // This is handled already by event delegation, but we'll double-check
+                    if (!$(this).data('form-initialized')) {
+                        $(this).data('form-initialized', true);
+                    }
+                });
+                
+                // Đảm bảo container replies đã sẵn sàng cho nested replies
+                const commentId = $(this).attr('id').split('-')[1];
+                if (commentId) {
+                    const repliesContainer = $(`#replies-${commentId}`);
+                    if (repliesContainer.length && !repliesContainer.hasClass('initialized')) {
+                        repliesContainer.addClass('initialized');
+                        
+                        // Nếu chưa có class ms-3 và ps-4, thêm vào
+                        if (!repliesContainer.hasClass('ms-3')) {
+                            repliesContainer.addClass('ms-3 ps-4');
+                        }
+                        
+                        // Kiểm tra xem nếu có replies, thêm vertical line
+                        if (repliesContainer.children().length > 0 && !repliesContainer.hasClass('position-relative')) {
+                            repliesContainer.addClass('position-relative');
+                            repliesContainer.prepend('<div class="comment-tree-line position-absolute" style="width: 2px; background-color: #dee2e6; top: 0; bottom: 0; left: 0;"></div>');
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Toggle reply form - improved to work with newly created comments
+    $(document).on('click', '.toggle-reply', function(e) {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent event bubbling
+        
         const commentId = $(this).data('id');
         const replyForm = $(`#reply-form-${commentId}`);
+        
+        // Close all other open reply forms first
+        $('.reply-form').not(replyForm).addClass('d-none');
+        
+        // Toggle this reply form
         replyForm.toggleClass('d-none');
+        
         if (!replyForm.hasClass('d-none')) {
-            replyForm.find('textarea').focus();
+            // Focus on textarea when showing the form
+            const textarea = replyForm.find('textarea');
+            textarea.focus();
+            adjustTextareaHeight(textarea);
         }
     });
     
@@ -450,5 +533,5 @@ $(document).ready(function () {
     }
     
     // Initialize textareas on page load
-    initTextareas();
+    initNewComment();
 });

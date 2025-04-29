@@ -13,6 +13,8 @@ $query = $conn->prepare("SELECT * FROM post WHERE id = ?");
 $query->bind_param("s", $post_id);
 $query->execute();
 $post = $query->get_result()->fetch_assoc();
+
+echo $_SESSION['captcha_verified_until'] - time();
 ?>
 
 <div class="container my-5">    
@@ -43,13 +45,13 @@ $post = $query->get_result()->fetch_assoc();
                     <div id="comment-error-container" class="alert alert-warning d-none"></div>
                     <?php if ($error == 'limit_1'): ?>
                         <div class="alert alert-warning">Bạn đã bình luận quá nhiều trong khoảng thời gian ngắn. Vui lòng xác nhận.</div>
-                        <div class="g-recaptcha mb-2" data-sitekey="6Ld_mCYrAAAAAKF2djMSAAiZBcEqTxCEE8U-8GX8" data-callback="enableSubmit"></div>
+                        <div class="g-recaptcha mb-2" data-sitekey="6LegBygrAAAAAKNTQp2O--5cJdDTHFqTsDY6Ld5b" data-callback="enableSubmit"></div>
                     <?php elseif ($error == 'limit_2'): ?>
                         <div class="alert alert-warning">Bạn đã bình luận quá giống nhau. Vui lòng xác nhận.</div>
-                        <div class="g-recaptcha mb-2" data-sitekey="6Ld_mCYrAAAAAKF2djMSAAiZBcEqTxCEE8U-8GX8" data-callback="enableSubmit"></div>
+                        <div class="g-recaptcha mb-2" data-sitekey="6LegBygrAAAAAKNTQp2O--5cJdDTHFqTsDY6Ld5b" data-callback="enableSubmit"></div>
                     <?php elseif ($error == 'recaptcha'): ?>
                         <div class="alert alert-danger">Vui lòng xác minh bạn là con người.</div>
-                        <div class="g-recaptcha mb-2" data-sitekey="6Ld_mCYrAAAAAKF2djMSAAiZBcEqTxCEE8U-8GX8" data-callback="enableSubmit"></div>
+                        <div class="g-recaptcha mb-2" data-sitekey="6LegBygrAAAAAKNTQp2O--5cJdDTHFqTsDY6Ld5b" data-callback="enableSubmit"></div>
                     <?php endif; ?>
                 </form>
             </div>
