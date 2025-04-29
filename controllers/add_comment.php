@@ -22,55 +22,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
     // Check spam time
     $time_limit = 60;
     $query_count_cmt = $conn->prepare("SELECT COUNT(*) FROM comment WHERE user_id = ? AND post_id = ? AND created_at > NOW() - INTERVAL ? SECOND");
-    $query_count_cmt->bind_param("iss", $user_id, $post_id, $time_limit);
+    $query_count_cmt->bind_param("sss", $user_id, $post_id, $time_limit);
     $query_count_cmt->execute();
     $comment_count = $query_count_cmt->get_result()->fetch_row()[0];
 
-    if ($comment_count >= 5) {
-        if (!isCaptchaVerified()) {
-            if (empty($_POST['g-recaptcha-response'])) {
-                if ($isAjax) {
-                    header('Content-Type: application/json');
-                    echo json_encode([
-                        'status' => 'error',
-                        'type' => 'limit_1',
-                        'message' => 'Bạn đã bình luận quá nhiều trong thời gian ngắn. Vui lòng xác nhận.',
-                        'redirect' => "/Comment-Nhom5/posts/{$post_id}?error=limit_1"
-                    ]);
-                    exit();
-                } else {
-                    header("Location: /Comment-Nhom5/posts/{$post_id}?error=limit_1");
-                    exit();
-                }
+    if ($comment_count >= 15) {
+        // Nếu chưa xác minh captcha và không có response g-recaptcha
+        if (!isCaptchaVerified() && empty($_POST['g-recaptcha-response'])) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'status' => 'error',
+                    'type' => 'limit_1',
+                    'message' => 'Bạn đã bình luận quá nhiều trong thời gian ngắn. Vui lòng xác nhận.',
+                    'redirect' => "/Comment-Nhom5/posts/{$post_id}?error=limit_1"
+                ]);
+                exit();
+            } else {
+                header("Location: /Comment-Nhom5/posts/{$post_id}?error=limit_1");
+                exit();
             }
+        } else if (!isCaptchaVerified() && !empty($_POST['g-recaptcha-response'])) {
+            // Nếu có response g-recaptcha, thực hiện xác minh
             validateCaptcha($_POST['g-recaptcha-response']);
         }
     }
 
     // Check spam nội dung
-    $query_count_cmt_same = $conn->prepare("SELECT COUNT(*) FROM comment WHERE user_id = ? AND post_id = ? AND content LIKE ?");
+    $query_count_cmt_same = $conn->prepare("SELECT COUNT(*) FROM comment WHERE user_id = ? AND post_id = ? AND content LIKE ? AND created_at > NOW() - INTERVAL ? SECOND");
     $content_same = "%" . $content . "%";
-    $query_count_cmt_same->bind_param("sss", $user_id, $post_id, $content_same);
+    $query_count_cmt_same->bind_param("ssss", $user_id, $post_id, $content_same, $time_limit);
     $query_count_cmt_same->execute();
     $comment_count_same = $query_count_cmt_same->get_result()->fetch_row()[0];
 
     if ($comment_count_same >= 5) {
-        if (!isCaptchaVerified()) {
-            if (empty($_POST['g-recaptcha-response'])) {
-                if ($isAjax) {
-                    header('Content-Type: application/json');
-                    echo json_encode([
-                        'status' => 'error',
-                        'type' => 'limit_2',
-                        'message' => 'Bạn đã bình luận quá giống nhau. Vui lòng xác nhận.',
-                        'redirect' => "/Comment-Nhom5/posts/{$post_id}?error=limit_2"
-                    ]);
-                    exit();
-                } else {
-                    header("Location: /Comment-Nhom5/posts/{$post_id}?error=limit_2");
-                    exit();
-                }
+        // Nếu chưa xác minh captcha và không có response g-recaptcha
+        if (!isCaptchaVerified() && empty($_POST['g-recaptcha-response'])) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'status' => 'error',
+                    'type' => 'limit_2',
+                    'message' => 'Bạn đã bình luận quá giống nhau. Vui lòng xác nhận.',
+                    'redirect' => "/Comment-Nhom5/posts/{$post_id}?error=limit_2"
+                ]);
+                exit();
+            } else {
+                header("Location: /Comment-Nhom5/posts/{$post_id}?error=limit_2");
+                exit();
             }
+        } else if (!isCaptchaVerified() && !empty($_POST['g-recaptcha-response'])) {
+            // Nếu có response g-recaptcha, thực hiện xác minh
             validateCaptcha($_POST['g-recaptcha-response']);
         }
     }
@@ -272,10 +274,11 @@ function isCaptchaVerified()
 function validateCaptcha($recaptcha_response)
 {
     $secret = $_ENV['RECAPTCHA_SECRET_KEY'] ?? '';
+    $post_id = $_POST['post_id'] ?? '';
     
     if (empty($secret)) {
         error_log('reCAPTCHA secret key is missing');
-        header("Location: /Comment-Nhom5/posts/{$_POST['post_id']}?error=recaptcha");
+        header("Location: /Comment-Nhom5/posts/{$post_id}?error=recaptcha");
         exit();
     }
     
@@ -283,7 +286,7 @@ function validateCaptcha($recaptcha_response)
     
     if (!$verifyResponse) {
         error_log('Could not connect to reCAPTCHA verification service');
-        header("Location: /Comment-Nhom5/posts/{$_POST['post_id']}?error=recaptcha");
+        header("Location: /Comment-Nhom5/posts/{$post_id}?error=recaptcha");
         exit();
     }
     
@@ -291,14 +294,16 @@ function validateCaptcha($recaptcha_response)
     
     if (!$responseData->success) {
         error_log('reCAPTCHA verification failed: ' . json_encode($responseData));
-        header("Location: /Comment-Nhom5/posts/{$_POST['post_id']}?error=recaptcha");
+        header("Location: /Comment-Nhom5/posts/{$post_id}?error=recaptcha");
         exit();
     }
     
-    // Nếu xác minh thành công, lưu session trong 10 phút
-    $_SESSION['captcha_verified_until'] = time() + 60;
+    // Nếu xác minh thành công, lưu session trong 1 phút
+    $_SESSION['captcha_verified_until'] = time() + 300;
     
-    return true;
+    // Chuyển hướng người dùng trở lại trang bình luận thay vì tiếp tục thực thi code
+    header("Location: /Comment-Nhom5/posts/{$post_id}?captcha_verified=true");
+    exit();
 }
 
 if (!$isAjax) {

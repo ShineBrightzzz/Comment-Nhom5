@@ -28,21 +28,16 @@ $(document).ready(function () {
                     textareaContent.val('');
                     
                     if (parentId) {
-                        // For replies, append the new comment to its parent's replies container
                         const repliesContainer = $('#replies-' + parentId);
                         
-                        // Log debug information to console
                         console.log('Adding reply to parent:', parentId);
                         console.log('Reply container:', repliesContainer.length ? 'Found' : 'Not found');
                         
-                        // If this is the first reply, we may need to setup the container properly
                         if (repliesContainer.children().length === 0) {
-                            // Add the tree line if not already present
                             repliesContainer.addClass('position-relative');
                             repliesContainer.prepend('<div class="comment-tree-line position-absolute" style="width: 2px; background-color: #dee2e6; top: 0; bottom: 0; left: 0;"></div>');
                         }
                         
-                        // Add the new reply to the beginning of the replies container
                         repliesContainer.prepend(response.html);
                         
                         // Đảm bảo replies container của comment mới được thêm vào cũng đã sẵn sàng cho nested replies
@@ -66,19 +61,15 @@ $(document).ready(function () {
                         // Hide the reply form
                         $('#reply-form-' + parentId).addClass('d-none');
                         
-                        // Update reply count
                         const replyCountBadge = repliesContainer.closest('.comment-container').find('.reply-count');
                         if (replyCountBadge.length > 0) {
-                            // Extract current number and increment
                             let currentCount = parseInt(replyCountBadge.text().split(' ')[0]);
                             replyCountBadge.text((currentCount + 1) + ' phản hồi');
                         } else {
-                            // Add new reply count badge
                             const replyBtn = repliesContainer.closest('.comment-container').find('.toggle-reply');
                             replyBtn.after('<span class="ms-2 badge bg-light text-dark reply-count">1 phản hồi</span>');
                         }
                     } else {
-                        // For new main comments, prepend to the comments section
                         $('.comments-section h4').after(response.html);
                         
                         // Đảm bảo container cho replies đã sẵn sàng
